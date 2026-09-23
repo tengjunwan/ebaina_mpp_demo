@@ -1,0 +1,31 @@
+# 1. CMake 专属屏蔽（极其重要）
+# 防止你某天忘记进 build 目录，不小心在根目录敲了 `cmake .` 导致源码被污染
+build/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
+
+# 2. C/C++ 编译中间产物及原厂 Makefile 遗留物
+*.o
+*.so
+*.a
+*.out
+*.exe
+# 屏蔽原厂 Makefile 可能直接在 src 目录下生成的散落可执行文件
+sample_* 
+
+# 3. 输出目录
+bin/
+lib/
+
+# 4. 编辑器与 IDE 配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 5. 系统垃圾文件（以防你用 Mac 或 Windows 挂载查看）
+.DS_Store
+Thumbs.db

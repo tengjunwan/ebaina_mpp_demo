@@ -1,0 +1,9 @@
+param_file := $(dir $(lastword $(MAKEFILE_LIST)))../Makefile.param
+include $(param_file)
+
+MPI_LIBS += $(REL_LIB)/libss_mpi_ive.a
+MPI_LIBS += $(REL_LIB)/libss_ivs_md.a
+#CFLAGS += -I$(PWD)/../../common
+CFLAGS += -I$(PWD)/../common
+CFLAGS += -fstack-protector-strong
+

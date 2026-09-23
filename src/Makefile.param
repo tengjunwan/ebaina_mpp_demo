@@ -1,0 +1,124 @@
+ARM_ARCH       = smp
+OSTYPE         = linux
+
+CROSS_COMPILE ?= arm-v01c02-linux-musleabi-
+
+CC             = $(CROSS_COMPILE)gcc
+CXX            = $(CROSS_COMPILE)g++
+strip          = $(CROSS_COMPILE)strip
+
+CFLAGS         = -Dhi3516cv610 -DOT_XXXX -DISP_V2 -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fsigned-char  -fstack-protector-strong -fPIC -ffunction-sections -fdata-sections -Os -mthumb -fno-aggressive-loop-optimizations -mcpu=cortex-a7 -mfloat-abi=softfp -mfpu=neon-vfpv4 -fPIE -pie -s -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fsigned-char -DVER_X=1 -DVER_Y=0 -DVER_Z=0 -DVER_P=0 -DVER_B=10 -DUSER_BIT_32 -DKERNEL_BIT_32 -DOT_RELEASE -Wno-date-time -Wl,-z,noexecstack
+
+################# select sensor type for your sample ###############################
+####    HY006_3814_0011_MIPI_4M_30FPS_10BIT    #################
+####    HY006_3814_0011_MIPI_3M_30FPS_10BIT    #################
+####    HY006_3814_0011_MIPI_2M_30FPS_10BIT    #################
+####    SC4336P_MIPI_4M_30FPS_10BIT            #################
+####    SC4336P_MIPI_3M_30FPS_10BIT            #################
+####    SC4336P_MIPI_2M_30FPS_10BIT            #################
+####    SC450AI_MIPI_4M_30FPS_10BIT            #################
+####    SC500AI_MIPI_5M_30FPS_10BIT            #################
+
+SENSOR0_TYPE ?= SC4336P_MIPI_4M_30FPS_10BIT
+SENSOR1_TYPE ?= SC4336P_MIPI_4M_30FPS_10BIT
+
+################# select board type for your sample ###############################
+####    DMEB_BGA            	#################
+####    DMEB_QFN             	#################
+
+BOARD_TYPE ?= DMEB_QFN
+
+CFLAGS += -DSENSOR0_TYPE=$(SENSOR0_TYPE)
+CFLAGS += -DSENSOR1_TYPE=$(SENSOR1_TYPE)
+
+SAMPLE_DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST)))../)
+OPTEE_DIR := $(SAMPLE_DIR)/src/optee/optee
+
+COMMON_DIR ?= $(SAMPLE_DIR)/src/common
+
+INC_FLAGS := -I$(SAMPLE_DIR)/include/hisilicon
+INC_FLAGS += -I$(SAMPLE_DIR)/include/hisilicon/exp_inc
+INC_FLAGS += -I$(SAMPLE_DIR)/include/hisilicon/module
+INC_FLAGS += -I$(SAMPLE_DIR)/include/3rdparty
+
+REL_LIB := $(SAMPLE_DIR)/lib/hisilicon
+3RDPARTY_LIBS_PATH :=$(SAMPLE_DIR)/lib/3rdparty
+
+MPI_LIBS := $(REL_LIB)/libss_mpi.a
+MPI_LIBS += $(REL_LIB)/libss_mpi_sysbind.a
+MPI_LIBS += $(REL_LIB)/libss_mpi_sysmem.a
+MPI_LIBS += $(REL_LIB)/libss_mpi_ae.a
+MPI_LIBS += $(REL_LIB)/libss_mpi_isp.a
+MPI_LIBS += $(REL_LIB)/libot_mpi_isp.a
+MPI_LIBS += $(REL_LIB)/libss_mpi_awb.a
+MPI_LIBS += $(REL_LIB)/libdehaze.a
+MPI_LIBS += $(REL_LIB)/libextend_stats.a
+MPI_LIBS += $(REL_LIB)/libdrc.a
+MPI_LIBS += $(REL_LIB)/libldci.a
+MPI_LIBS += $(REL_LIB)/libbnr.a
+MPI_LIBS += $(REL_LIB)/libcalcflicker.a
+MPI_LIBS += $(REL_LIB)/libir_auto.a
+MPI_LIBS += $(REL_LIB)/libacs.a
+MPI_LIBS += $(REL_LIB)/libsns_hy006_3814_0011.a
+MPI_LIBS += $(REL_LIB)/libsns_sc4336p.a
+MPI_LIBS += $(REL_LIB)/libsns_sc450ai.a
+MPI_LIBS += $(REL_LIB)/libsns_sc500ai.a
+MPI_LIBS += $(REL_LIB)/libss_mpi_aibnr.a
+MPI_LIBS += $(REL_LIB)/libsvp_acl.a
+MPI_LIBS += $(REL_LIB)/libss_mpi_km.a
+MPI_LIBS += $(REL_LIB)/libprotobuf-c.a
+MPI_LIBS += $(3RDPARTY_LIBS_PATH)/libxoprtsp.a
+
+AUDIO_LIBA := $(REL_LIB)/libss_mpi_audio.a
+AUDIO_LIBA += $(REL_LIB)/libvoice_engine.a
+AUDIO_LIBA += $(REL_LIB)/libupvqe.a
+AUDIO_LIBA += $(REL_LIB)/libdnvqe.a
+AUDIO_LIBA += $(REL_LIB)/libss_mpi_audio_adp.a
+AUDIO_LIBA += $(REL_LIB)/libopus.a
+
+################ select audio codec type for your sample ################
+ACODEC_TYPE ?= ACODEC_TYPE_INNER
+
+ifeq ($(ACODEC_TYPE), ACODEC_TYPE_INNER)
+	CFLAGS += -DOT_ACODEC_TYPE_INNER
+endif
+
+################ select audio module library type for your sample ################
+##### VQE #####
+CFLAGS += -DOT_VQE_USE_STATIC_MODULE_REGISTER
+AUDIO_LIBA += $(REL_LIB)/libvqe_res.a
+AUDIO_LIBA += $(REL_LIB)/libvqe_record.a
+AUDIO_LIBA += $(REL_LIB)/libvqe_hpf.a
+AUDIO_LIBA += $(REL_LIB)/libvqe_anr.a
+AUDIO_LIBA += $(REL_LIB)/libvqe_aec.a
+AUDIO_LIBA += $(REL_LIB)/libvqe_agc.a
+AUDIO_LIBA += $(REL_LIB)/libvqe_eq.a
+AUDIO_LIBA += $(REL_LIB)/libvqe_talkv2.a
+##### AAC #####
+AUDIO_LIBA += $(REL_LIB)/libaac_dec.a
+AUDIO_LIBA += $(REL_LIB)/libaac_enc.a
+AUDIO_LIBA += $(REL_LIB)/libaac_comm.a
+AUDIO_LIBA += $(REL_LIB)/libaac_sbr_dec.a
+AUDIO_LIBA += $(REL_LIB)/libaac_sbr_enc.a
+
+
+#########################################################################
+#COMM_SRC := $(wildcard $(COMMON_DIR)/*.c)
+COMM_SRC := $(wildcard $(COMMON_DIR)/sample_comm_sys.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sample_comm_isp.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sample_comm_vi.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sample_comm_vpss.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/loadbmp.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/ot_confaccess.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sample_comm_audio.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sample_comm_venc.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sample_comm_region.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sample_comm_osd_drawline.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sample_ipc.c)
+COMM_SRC += $(wildcard $(COMMON_DIR)/sns_type.c)
+COMM_OBJ := $(COMM_SRC:%.c=%.o)
+COMM_INC := -I$(COMMON_DIR)
+
+CFLAGS += -DBOARD_TYPE=$(BOARD_TYPE)
+CFLAGS += $(COMM_INC)
+CFLAGS += $(INC_FLAGS)

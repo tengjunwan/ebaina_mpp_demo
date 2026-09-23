@@ -1,0 +1,124 @@
+diff --git a/Makefile b/Makefile
+index 0578b63..7488353 100644
+--- a/Makefile
++++ b/Makefile
+@@ -16,7 +16,8 @@ SBINDIR ?= /usr/sbin
+ LIBDIR ?= /usr/lib
+ INCLUDEDIR ?= /usr/include
+ 
+-WITH_TEEACL ?= 1
++# if the libteeacl.a is needed, set the WITH_TEEACL 1.
++WITH_TEEACL ?= 0
+ 
+ .PHONY: all build build-libteec build-libckteec build-libseteec \
+ 	build-libteeacl install copy_export clean cscope \
+@@ -35,7 +36,7 @@ build-libteec:
+ 
+ build-tee-supplicant: build-libteec
+ 	@echo "Building tee-supplicant"
+-	$(MAKE) --directory=tee-supplicant  --no-print-directory --no-builtin-variables CFG_TEE_SUPP_LOG_LEVEL=$(CFG_TEE_SUPP_LOG_LEVEL)
++	$(MAKE) --directory=tee-supplicant  --no-print-directory --no-builtin-variables CFG_TEE_SUPP_LOG_LEVEL=$(CFG_TEE_SUPP_LOG_LEVEL) PLATFORM_FLAVOR=$(PLATFORM)
+ 
+ build: build-libteec build-tee-supplicant build-libckteec build-libseteec
+ ifeq ($(WITH_TEEACL),1)
+diff --git a/flags.mk b/flags.mk
+index 7052d80..32bed8e 100644
+--- a/flags.mk
++++ b/flags.mk
+@@ -20,6 +20,7 @@ ifeq ($(CFG_WERROR),y)
+ override CFLAGS	+= -Werror
+ endif
+ override CFLAGS += -c -fPIC
++override CFLAGS += -fstack-protector-all
+ 
+ DEBUG       ?= 0
+ ifeq ($(DEBUG), 1)
+diff --git a/libckteec/Makefile b/libckteec/Makefile
+index 859ce3c..96e5efc 100644
+--- a/libckteec/Makefile
++++ b/libckteec/Makefile
+@@ -37,6 +37,7 @@ LIBCKTEEC_CFLAGS	:= $(addprefix -I, $(LIBCKTEEC_INCLUDES)) \
+ 			$(CFLAGS) -D_GNU_SOURCE -fPIC
+ 
+ LIBCKTEEC_LFLAGS	:= $(LDFLAGS) -L$(OUT_DIR)/../libteec -lteec
++LIBCKTEEC_LFLAGS	:= -W -z relro -z now -s
+ 
+ LIBCKTEEC_OBJ_DIR	:= $(OUT_DIR)
+ LIBCKTEEC_OBJS		:= $(patsubst %.c,$(LIBCKTEEC_OBJ_DIR)/%.o, $(LIBCKTEEC_SRCS))
+diff --git a/libteec/Makefile b/libteec/Makefile
+index 3b279ab..a1f4309 100644
+--- a/libteec/Makefile
++++ b/libteec/Makefile
+@@ -39,6 +39,7 @@ TEEC_CFLAGS	+= -DCFG_TEE_BENCHMARK
+ endif
+ 
+ TEEC_LFLAGS    := $(LDFLAGS) -lpthread
++TEEC_LFLAGS    := -W -z relro -z now -s
+ TEEC_LIBRARY	:= $(OUT_DIR)/$(LIB_MAJ_MIN_P)
+ 
+ libteec: $(TEEC_LIBRARY) $(OUT_DIR)/libteec.a
+diff --git a/tee-supplicant/Makefile b/tee-supplicant/Makefile
+index b862a7e..9b048cb 100644
+--- a/tee-supplicant/Makefile
++++ b/tee-supplicant/Makefile
+@@ -1,6 +1,10 @@
+ include ../flags.mk
+ include ../config.mk
+ 
++ifneq (,$(findstring hi3516cv610_demo, $(PLATFORM_FLAVOR)))
++include ../vendor/config_hi3516cv610.mk
++endif
++ 
+ OUT_DIR := $(OO)/tee-supplicant
+ 
+ # Emulate RPMB ioctl's by default
+@@ -47,6 +51,7 @@ TEES_CFLAGS	:= $(addprefix -I, $(TEES_INCLUDES)) $(CFLAGS) \
+ 		   -DBINARY_PREFIX=\"TEES\" \
+ 		   -DTEE_FS_PARENT_PATH=\"$(CFG_TEE_FS_PARENT_PATH)\" \
+ 		   -DTEEC_LOAD_PATH=\"$(CFG_TEE_CLIENT_LOAD_PATH)\" \
++		   -fPIE -fPIC
+ 
+ ifeq ($(CFG_GP_SOCKETS),y)
+ TEES_CFLAGS	+= -DCFG_GP_SOCKETS=1
+@@ -59,6 +64,7 @@ TEES_CFLAGS	+= -DCFG_TA_TEST_PATH=1
+ endif
+ TEES_FILE	:= $(OUT_DIR)/$(PACKAGE_NAME)
+ TEES_LFLAGS    := $(LDFLAGS) -L$(OUT_DIR)/../libteec -lteec
++TEES_LFLAGS    += -pie -W -z relro -z now -s
+ 
+ ifeq ($(CFG_TA_GPROF_SUPPORT),y)
+ TEES_CFLAGS	+= -DCFG_TA_GPROF_SUPPORT
+@@ -81,7 +87,8 @@ ifeq ($(CFG_TEE_SUPP_PLUGINS),y)
+ # Needed to dynamically load user plugins
+ TEES_LFLAGS	+= -ldl
+ # Needed for dlopen()
+-TEES_LFLAGS 	+= -Wl,-rpath=$(CFG_TEE_PLUGIN_LOAD_PATH)
++# The compilation option needs to be disabled during ICSL scanning.
++#TEES_LFLAGS 	+= -Wl,-rpath=$(CFG_TEE_PLUGIN_LOAD_PATH)
+ endif
+ 
+ tee-supplicant: $(TEES_FILE)
+diff --git a/tee-supplicant/tee_supplicant_android.mk b/tee-supplicant/tee_supplicant_android.mk
+index 49bc388..75e9e68 100644
+--- a/tee-supplicant/tee_supplicant_android.mk
++++ b/tee-supplicant/tee_supplicant_android.mk
+@@ -53,7 +53,8 @@ LOCAL_CFLAGS += -DTEE_SUPP_PLUGINS \
+ # Needed to dynamically load user plugins
+ LOCAL_LDFLAGS += -ldl
+ # Needed for dlopen()
+-LOCAL_LDFLAGS += -Wl,-rpath=$(CFG_TEE_PLUGIN_LOAD_PATH)
++# The compilation option needs to be disabled during ICSL scanning.
++#LOCAL_LDFLAGS += -Wl,-rpath=$(CFG_TEE_PLUGIN_LOAD_PATH)
+ endif
+ 
+ LOCAL_CFLAGS += -pthread
+diff --git a/vendor/config_hi3516cv610.mk b/vendor/config_hi3516cv610.mk
+new file mode 100644
+index 0000000..40ae518
+--- /dev/null
++++ b/vendor/config_hi3516cv610.mk
+@@ -0,0 +1,4 @@
++RPMB_EMU = 0
++CFG_GP_SOCKETS = n
++CFG_TA_GPROF_SUPPORT = n
++CFG_FTRACE_SUPPORT = n

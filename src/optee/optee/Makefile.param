@@ -1,0 +1,2 @@
+OPTEE_OS_VER ?= optee_os-3.20.0
+OPTEE_CLIENT_VER ?= optee_client-3.20.0

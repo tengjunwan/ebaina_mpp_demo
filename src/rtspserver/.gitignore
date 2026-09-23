@@ -1,0 +1,6 @@
+objs/
+rtsp_h264_file
+rtsp_h265_file
+rtsp_pusher
+rtsp_server
+*.a

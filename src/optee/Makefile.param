@@ -1,0 +1,2 @@
+param_file := $(dir $(lastword $(MAKEFILE_LIST)))../Makefile.param
+include $(param_file)
