@@ -18,6 +18,7 @@ td_bool sample_set_sns_type(sample_sns_type sns_type, td_u32 index)
 void sample_set_all_sns_type(sample_sns_type type)
 {
     td_u32 i;
+    printf("[wtjdebug][sns_type][sample_set_all_sns_type]: SAMPLE_SENSOR_MAX_NUM = %d\n", SAMPLE_SENSOR_MAX_NUM);
     for (i = 0; i < SAMPLE_SENSOR_MAX_NUM; i++) {
         g_sns_type[i] = type;
     }
