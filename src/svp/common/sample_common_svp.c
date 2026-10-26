@@ -615,6 +615,68 @@ fail:
     return ret;
 }
 
+
+td_s32 sample_common_svp_vgs_fill_rect_for_new_rpn(const ot_video_frame_info *frame_info,
+    ot_sample_svp_rect_info *rect, td_u32 default_color)
+{
+    ot_vgs_handle vgs_handle = -1;
+    td_s32 ret = TD_FAILURE;
+    td_u16 i;
+    ot_vgs_task_attr vgs_task;
+    ot_cover vgs_add_cover;
+
+    sample_svp_check_exps_return(frame_info == TD_NULL, ret, SAMPLE_SVP_ERR_LEVEL_ERROR, "frame_info can't be null\n");
+    sample_svp_check_exps_return(rect == TD_NULL, ret, SAMPLE_SVP_ERR_LEVEL_ERROR, "rect can't be null\n");
+    sample_svp_check_exps_return(rect->num > OT_SVP_RECT_NUM, ret,
+        SAMPLE_SVP_ERR_LEVEL_ERROR, "rect->num can't lager than %u\n", OT_SVP_RECT_NUM);
+    if (rect->num == 0) {
+        return TD_SUCCESS;
+    }
+
+    ret = ss_mpi_vgs_begin_job(&vgs_handle);
+    sample_svp_check_exps_return(ret != TD_SUCCESS, ret, SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Vgs begin job fail,Error(%#x)\n", ret);
+
+    ret = memcpy_s(&vgs_task.img_out, sizeof(ot_video_frame_info), frame_info, sizeof(ot_video_frame_info));
+    sample_svp_check_exps_goto(ret != EOK, fail, SAMPLE_SVP_ERR_LEVEL_ERROR, "get img_out failed\n");
+    ret = memcpy_s(&vgs_task.img_in, sizeof(ot_video_frame_info), frame_info, sizeof(ot_video_frame_info));
+    sample_svp_check_exps_goto(ret != EOK, fail, SAMPLE_SVP_ERR_LEVEL_ERROR, "get img_in failed\n");
+
+    vgs_add_cover.type = OT_COVER_QUAD;
+    
+    for (i = 0; i < rect->num; i++) {
+        // ==========================================
+        // 核心修改：优先级为 AprilTag解算成功 > 高分YOLO框 > 低分YOLO框
+        // ==========================================
+        if (rect->is_found_apriltag[i] == TD_TRUE) {
+            vgs_add_cover.color = 0x00FF0000; // 红色：成功匹配并解算 AprilTag
+        } else if (rect->score[i] >= 0.6f) {
+            vgs_add_cover.color = 0x0000FF00; // 绿色：高置信度 YOLO 框 (>= 0.6)
+        } else {
+            vgs_add_cover.color = 0x000000FF; // 蓝色：低置信度 YOLO 框 (< 0.6)
+        }
+
+        vgs_add_cover.quad_attr.is_solid = TD_FALSE;
+        vgs_add_cover.quad_attr.thick = OT_SAMPLE_IVE_DRAW_THICK;
+        ret = memcpy_s(vgs_add_cover.quad_attr.point, sizeof(rect->rect[i].point),
+            rect->rect[i].point, sizeof(rect->rect[i].point));
+        sample_svp_check_exps_goto(ret != EOK, fail, SAMPLE_SVP_ERR_LEVEL_ERROR, "get point failed\n");
+        
+        ret = ss_mpi_vgs_add_cover_task(vgs_handle, &vgs_task, &vgs_add_cover, 1);
+        sample_svp_check_exps_goto(ret != TD_SUCCESS, fail, SAMPLE_SVP_ERR_LEVEL_ERROR,
+            "ss_mpi_vgs_add_cover_task fail, Error(%#x)\n", ret);
+    }
+
+    ret = ss_mpi_vgs_end_job(vgs_handle);
+    sample_svp_check_exps_goto(ret != TD_SUCCESS, fail, SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "ss_mpi_vgs_end_job fail, Error(%#x)\n", ret);
+
+    return ret;
+fail:
+    ss_mpi_vgs_cancel_job(vgs_handle);
+    return ret;
+}
+
 /* function : Start Vpss */
 static td_s32 sample_common_svp_start_vpss(td_s32 vpss_grp_cnt, ot_size *pic_size, td_u32 vpss_chn_num)
 {

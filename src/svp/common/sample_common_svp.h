@@ -42,11 +42,20 @@ typedef struct {
     ot_point point[OT_POINT_NUM];
 } ot_sample_svp_rect;
 
+// typedef struct {
+//     td_u16 num;
+//     ot_sample_svp_rect rect[OT_SVP_RECT_NUM];
+//     td_u32 ids[OT_SVP_RECT_NUM];
+// } ot_sample_svp_rect_info;
+
 typedef struct {
     td_u16 num;
     ot_sample_svp_rect rect[OT_SVP_RECT_NUM];
     td_u32 ids[OT_SVP_RECT_NUM];
+    td_float score[OT_SVP_RECT_NUM];  // 新增：用于存放每个框的置信度
+    td_bool is_found_apriltag[OT_SVP_RECT_NUM]; // 新增：显式标识该框是否成功解算姿态
 } ot_sample_svp_rect_info;
+
 
 typedef struct {
     td_float point[OT_COORDS_POINT_NUM];
@@ -249,6 +258,9 @@ td_s32 sample_common_svp_flush_cache(td_phys_addr_t phys_addr, td_void *virt_add
 /* function : Call vgs to fill rect */
 td_s32 sample_common_svp_vgs_fill_rect(const ot_video_frame_info *frame_info,
     ot_sample_svp_rect_info *rect, td_u32 color);
+
+td_s32 sample_common_svp_vgs_fill_rect_for_new_rpn(const ot_video_frame_info *frame_info,
+    ot_sample_svp_rect_info *rect, td_u32 default_color);  // wtjdebug: 暴力覆盖版 new_rpn 专用绘制函数
 
 /* function : Draw id of rect */
 td_s32 sample_common_svp_vgs_fill_tracker_id(const ot_video_frame_info *frame_info, ot_sample_svp_rect_info *rect,

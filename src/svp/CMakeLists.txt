@@ -20,3 +20,7 @@ target_link_libraries(sample_svp_npu_main PRIVATE
     ${PROJECT_SOURCE_DIR}/lib/hisilicon/libss_mpi_ive.a
     # ${PROJECT_SOURCE_DIR}/lib/hisilicon/libss_ivs_md.a
 )
+
+# 只需要这一句话！
+# 它会自动把 apriltag_c_wrapper.h 的路径带过来，并完成链接
+target_link_libraries(sample_svp_npu_main PRIVATE apriltag_algo)

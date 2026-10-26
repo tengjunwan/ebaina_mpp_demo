@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
-project(Hi3516CV610_Project C CXX)
+
 
 # 配置交叉编译器
-set(CMAKE_C_COMPILER "arm-v01c02-linux-musleabi-gcc")
-set(CMAKE_CXX_COMPILER "arm-v01c02-linux-musleabi-g++")
+set(CMAKE_C_COMPILER "/opt/linux/x86-arm/arm-v01c02-linux-musleabi-gcc/bin/arm-v01c02-linux-musleabi-gcc")
+set(CMAKE_CXX_COMPILER "/opt/linux/x86-arm/arm-v01c02-linux-musleabi-gcc/bin/arm-v01c02-linux-musleabi-g++")
+
+project(Hi3516CV610_Project LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 11)
 
 # 全局编译选项
 add_compile_options(
@@ -117,5 +121,14 @@ file(GLOB COMMON_SRCS
 add_library(common_obj STATIC ${COMMON_SRCS})
 target_link_libraries(common_obj PUBLIC hisi_sdk)
 
+# 先加入第三方底层库
+set(BUILD_PYTHON_WRAPPER OFF)
+# 强制将后续未指明类型的 add_library 默认编译为静态库
+set(BUILD_SHARED_LIBS OFF)
+add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/apriltag)
+
+# 再加入你封装的算法模块
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/apriltag_algo)
+
 # 添加子模块目录
-add_subdirectory(src/svp)
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/svp)

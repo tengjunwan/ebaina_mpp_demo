@@ -1822,7 +1822,7 @@ td_s32 sample_common_svp_npu_roi_to_rect_for_new_rpn(const sample_svp_npu_task_i
     }
 
     // 2. 典型的贪心 NMS 循环
-    td_float nms_threshold = 0.45f; // YOLO 常用的 IoU 阈值，可随时修改
+    td_float nms_threshold = 0.75f; // YOLO 常用的 IoU 阈值，可随时修改
     td_u32 nms_survive_count = 0;
 
     for (i = 0; i < out_num; i++) {
@@ -1853,6 +1853,12 @@ td_s32 sample_common_svp_npu_roi_to_rect_for_new_rpn(const sample_svp_npu_task_i
         printf("[wtjdebug] Survived box[%u]: class_id=%u, score=%.4f, coord=[%.2f, %.2f, %.2f, %.2f]\n", 
                valid_count, bboxes[i].class_id, bboxes[i].score, 
                bboxes[i].xmin, bboxes[i].ymin, bboxes[i].xmax, bboxes[i].ymax);
+
+        // ==============================================================
+        // 【核心修改】将 NMS 存活下来的置信度和类别 ID 写入外部 rect_info
+        // ==============================================================
+        rect_info->score[valid_count] = bboxes[i].score;
+        rect_info->ids[valid_count]   = bboxes[i].class_id;
 
         rect_info->rect[valid_count].point[SAMPLE_SVP_NPU_RECT_LEFT_TOP].x = 
             (td_u32)(bboxes[i].xmin / proc_frame->video_frame.width * show_frame->video_frame.width) & (~1);
