@@ -35,4 +35,7 @@ td_void sample_svp_npu_acl_handle_sig(td_void);
 
 td_void sample_svp_npu_enable_rtsp(td_u32 enable);
 
+// 在 sample_svp_npu_process.h 中追加
+void sample_svp_capture_threads_init(void);
+
 #endif

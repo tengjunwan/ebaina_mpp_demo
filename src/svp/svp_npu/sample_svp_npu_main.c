@@ -183,6 +183,13 @@ int main(int argc, char *argv[])
             printf("[wtjdebug][sample_svp_npu_main][main]: sns_type = %d\n", sns_type);
             sample_set_all_sns_type(sns_type);
         }
+        
+        // ====================================================================
+        // [新增] 启动异步抓图与网络发送线程
+        // 注意：需确保在此文件头部或 sample_svp_npu_process.h 中声明了该函数
+        // ====================================================================
+        sample_svp_capture_threads_init();
+
         ret = sample_svp_npu_case_with_two_args(*argv[1], *argv[SAMPLE_SVP_NPU_ARG_IDX_TWO]);
 
     } else {

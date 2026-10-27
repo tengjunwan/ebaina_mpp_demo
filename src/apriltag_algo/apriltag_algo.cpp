@@ -60,15 +60,42 @@ bool ApriltagAlignment::align(const ImageU8& full_gray_img, const CropRect& bbox
     // ==========================================
     int max_dim = std::max(crop_w, crop_h);
 
-    if (max_dim < 120) {
-        td_->quad_decimate = 1.0;
-    } else if (max_dim < 240) {
-        td_->quad_decimate = 2.0;
-    } else if (max_dim < 360) {
-        td_->quad_decimate = 3.0;
-    } else {
-        td_->quad_decimate = 4.0;
-    }
+    // if (max_dim < 120) {
+    //     td_->quad_decimate = 1.0;
+    // } else if (max_dim < 240) {
+    //     td_->quad_decimate = 2.0;
+    // } else if (max_dim < 360) {
+    //     td_->quad_decimate = 3.0;
+    // } else if (max_dim < 360) {
+    //     td_->quad_decimate = 3.0;
+    // } else if (max_dim < 480) {
+    //     td_->quad_decimate = 4.0;
+    // } else if (max_dim < 600) {
+    //     td_->quad_decimate = 5.0;
+    // } else if (max_dim < 720) {
+    //     td_->quad_decimate = 6.0;
+    // } else if (max_dim < 840) {
+    //     td_->quad_decimate = 7.0;
+    // } else if (max_dim < 960) {
+    //     td_->quad_decimate = 8.0;
+    // } else if (max_dim < 1080) {
+    //     td_->quad_decimate = 9.0;
+    // } else if (max_dim < 1200) {
+    //     td_->quad_decimate = 10.0;
+    // } else if (max_dim < 1320) {
+    //     td_->quad_decimate = 11.0;
+    // } else if (max_dim < 1440) {
+    //     td_->quad_decimate = 12.0;
+    // } else {
+    //     td_->quad_decimate = 13.0;
+    // }
+
+    // 利用整数除法特性，完美匹配原代码边界 (例如 119/120+1 = 1, 120/120+1 = 2)
+    const int min_size = 48;
+    int decimate = (max_dim / min_size) + 1;
+
+    // 限制最大值为 13.0，对应原代码最后的 else 分支兜底
+    td_->quad_decimate = (decimate > 13) ? 13.0f : (float)decimate;
 
     std::cout << "max_dim: " << max_dim << std::endl;
     std::cout << "quad_decimate: " << td_->quad_decimate << std::endl;
@@ -169,7 +196,7 @@ bool ApriltagAlignment::align(const ImageU8& full_gray_img, const CropRect& bbox
     //     if (pose1.t) matd_destroy(pose1.t);
     // }
 
-    
+
     end_time = std::chrono::high_resolution_clock::now();
     if (debug_) {
         double debug_time_cost_ = std::chrono::duration<double, std::milli>(end_time - start_time).count();
