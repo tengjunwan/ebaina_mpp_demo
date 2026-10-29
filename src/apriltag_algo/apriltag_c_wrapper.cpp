@@ -29,19 +29,12 @@ void apriltag_align_destroy(apriltag_align_handle_t handle) {
     }
 }
 
-bool apriltag_align_process(apriltag_align_handle_t handle, 
-                            const apriltag_img_u8_t* img, 
-                            const apriltag_crop_rect_t* bbox) 
-{
-    if (!handle || !img || !bbox) return false;
-
+bool apriltag_align_process(void* handle, const apriltag_img_u8_t* small_img, float scale_x, float scale_y, int offset_x, int offset_y) {
     ApriltagAlignment* aligner = static_cast<ApriltagAlignment*>(handle);
+    ImageU8 img_view = {small_img->data, small_img->width, small_img->height, small_img->stride};
     
-    // C struct 映射为 C++ struct
-    ImageU8 cpp_img = {img->data, img->width, img->height, img->stride};
-    CropRect cpp_bbox = {bbox->x, bbox->y, bbox->width, bbox->height};
-
-    return aligner->align(cpp_img, cpp_bbox);
+    // 调用底层纯算法类的最新 align 方法
+    return aligner->align(img_view, scale_x, scale_y, offset_x, offset_y);
 }
 
 bool apriltag_align_is_found(apriltag_align_handle_t handle) {

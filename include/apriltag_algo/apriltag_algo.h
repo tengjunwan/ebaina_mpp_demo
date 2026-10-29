@@ -53,7 +53,9 @@ public:
 
     // ----核心业务接口----
     // 传入硬件提取的 ImageU8 结构体和裁剪框信息
-    bool align(const ImageU8& full_gray_img, const CropRect& bbox);
+    bool align(const ImageU8& tag_small_img, 
+               float scale_x, float scale_y, 
+               int offset_x, int offset_y);
 
     // ----状态获取接口----
     bool is_found() const { return found_36h11_; }

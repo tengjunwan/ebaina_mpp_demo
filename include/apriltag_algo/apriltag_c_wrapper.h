@@ -44,9 +44,12 @@ apriltag_align_handle_t apriltag_align_create(
 void apriltag_align_destroy(apriltag_align_handle_t handle);
 
 // 3. 执行对齐算法 (对应 C++ 的 align 成员函数)
-bool apriltag_align_process(apriltag_align_handle_t handle, 
-                            const apriltag_img_u8_t* img, 
-                            const apriltag_crop_rect_t* bbox);
+bool apriltag_align_process(void* handle, 
+                            const apriltag_img_u8_t* small_img, 
+                            float scale_x, 
+                            float scale_y, 
+                            int offset_x, 
+                            int offset_y);
 
 // 4. 获取结果接口
 bool apriltag_align_is_found(apriltag_align_handle_t handle);
