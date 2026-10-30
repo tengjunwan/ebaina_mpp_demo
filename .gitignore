@@ -7,23 +7,23 @@ Makefile
 cmake_install.cmake
 compile_commands.json
 
-# 2. C/C++ 编译中间产物及原厂 Makefile 遗留物
-*.o
-*.so
-*.a
-*.out
-*.exe
+# # 2. C/C++ 编译中间产物及原厂 Makefile 遗留物
+# *.o
+# *.so
+# *.a
+# *.out
+# *.exe
 
-# 屏蔽原厂 Makefile 可能直接在 src 目录下生成的散落可执行文件
-sample_*
-# 但严禁屏蔽 C/C++ 源码和头文件！
-!sample_*.c
-!sample_*.h
-!sample_*.cpp
+# # 屏蔽原厂 Makefile 可能直接在 src 目录下生成的散落可执行文件
+# sample_*
+# # 但严禁屏蔽 C/C++ 源码和头文件！
+# !sample_*.c
+# !sample_*.h
+# !sample_*.cpp
 
-# 3. 输出目录
-bin/
-lib/
+# # 3. 输出目录
+# bin/
+# lib/
 
 # 4. 编辑器与 IDE 配置文件
 .vscode/
